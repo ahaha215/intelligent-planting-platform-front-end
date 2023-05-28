@@ -1,0 +1,595 @@
+﻿<!doctype html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>种植智能感知与控制可视化平台</title>
+	<script type="text/javascript" src="js/jquery.js"></script>
+	<script type="text/javascript" src="js/echarts.min.js"></script>
+	<script type="text/javascript" src="js/china.js"></script>
+	<script type="text/javascript" src="js/map.js"></script>
+	<script type="text/javascript" src="js/Bubble.js"></script>
+	<link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+	<!-- 头部开始 -->
+	<div class="head clearfix">
+		<h1 class="pulll_left">种植智能感知与控制数据可视化平台</h1>
+		<div class="menu menu2 pulll_left">
+			<ul>
+				<li><a> 智能感知 </a></li>
+				<li><a> 在线控制 </a></li>
+				<li><a> 让农业现代化 </a></li>
+				<li><a> 让种植智能化 </a></li>
+			</ul>
+		</div>
+
+		<div class="time" id="showTime"></div>
+		<script>
+			var t = null;
+			t = setTimeout(time, 1000);
+			function time() {
+				clearTimeout(t);
+				dt = new Date();
+				var y = dt.getFullYear();
+				var mt = dt.getMonth() + 1;
+				var day = dt.getDate();
+				var h = dt.getHours();
+				var m = dt.getMinutes();
+				var s = dt.getSeconds();
+				document.getElementById("showTime").innerHTML = y + " 年 " + mt + " 月 " + day + " 日 " + h + " 时 " + m + " 分 " + s + " 秒 ";
+				t = setTimeout(time, 1000);
+			}
+		</script>
+	</div>
+	<!-- 头部结束 -->
+
+	<!-- 主体部分 -->
+	<div class="mainbox" style="height: calc(100vh - 90px);">
+		<ul class="clearfix nav1" style="height: 66%;">
+
+			<!-- 实时数据开始 -->
+			<li style="width: 22%;height: 100%;">
+				<div class="box" style="height: 100%; overflow-y: scroll;">
+					<div class="tit">实时数据</div>
+					<div class="boxnav">
+						<table class="table1" width="100%" border="0" cellspacing="0" cellpadding="0">
+							<tbody>
+								<tr>
+									<th>采集因子</th>
+									<th>传感器</th>
+									<th>实时数据</th>
+								</tr>
+								<tr>
+									<td>棚内温度</td>
+									<td><span class="text-w">DHT11</span></td>
+									<td><span class="text-b data_val">0.0</span></td>
+								</tr>
+								<tr>
+									<td>棚内湿度</td>
+									<td><span class="text-w">DHT11</span></td>
+									<td><span class="text-b data_val">0.0</span></td>
+								</tr>
+								<tr>
+									<td>一层土温</td>
+									<td><span class="text-w">DS18B20</span></td>
+									<td><span class="text-b data_val">0.0</span></td>
+								</tr>
+								<tr>
+									<td>一层土湿</td>
+									<td><span class="text-w">ILT5V</span></td>
+									<td><span class="text-b data_val">0.0</span></td>
+								</tr>
+								<tr>
+									<td>二层土温</td>
+									<td><span class="text-w">DS18B20</span></td>
+									<td><span class="text-b data_val">0.0</span></td>
+								</tr>
+								<tr>
+									<td>二层土湿</td>
+									<td><span class="text-w">ILT5V</span></td>
+									<td><span class="text-b data_val">0.0</span></td>
+								</tr>
+								<tr>
+									<td>PM2.5</td>
+									<td><span class="text-w">GP2Y10</span></td>
+									<td><span class="text-b data_val">0.0</span></td>
+								</tr>
+								<tr>
+									<td>PH</td>
+									<td><span class="text-w">PH4502C</span></td>
+									<td><span class="text-b data_val">0.0</span></td>
+								</tr>
+								<tr>
+									<td>CO</td>
+									<td><span class="text-w">MQ-9</span></td>
+									<td><span class="text-b data_val">0.0</span></td>
+								</tr>
+								<tr>
+									<td>风速</td>
+									<td><span class="text-w">TCS-ABS</span></td>
+									<td><span class="text-b data_val">0.0</span></td>
+								</tr>
+								<tr>
+									<td>降雨量</td>
+									<td><span class="text-w">YW01</span></td>
+									<td><span class="text-b data_val">0.0</span></td>
+								</tr>
+								<tr>
+									<td>光照</td>
+									<td><span class="text-w">1982AY</span></td>
+									<td><span class="text-b data_val">0.0</span></td>
+								</tr>
+								<tr>
+									<td>紫外线</td>
+									<td><span class="text-w">S12D</span></td>
+									<td><span class="text-b data_val">0.0</span></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</li>
+			<!-- 实时数据结束 -->
+
+			<!-- 地图开始 -->
+			<li style="width: 56%;height: 100%;">
+				<div class="box" style="height: 100%;">
+					<div class="boxnav mapc" style="height: 100%; position: relative">
+						<div class="map" id="map"></div>
+					</div>
+				</div>
+			</li>
+			<script>
+				$(function () {
+					map();
+					function map() {
+						// 基于准备好的dom，初始化echarts实例
+						var myChart = echarts.init(document.getElementById('map'));
+						var data = [
+							{ name: '锦州', value: 300 }
+						];
+						var geoCoordMap = {
+							'锦州': [121.127003, 41.095119]
+						};
+						var convertData = function (data) {
+							var res = [];
+							for (var i = 0; i < data.length; i++) {
+								var geoCoord = geoCoordMap[data[i].name];
+								if (geoCoord) {
+									res.push({
+										name: data[i].name,
+										value: geoCoord.concat(data[i].value)
+									});
+								}
+							}
+							return res;
+						};
+
+						option = {
+							// backgroundColor: '#404a59',
+							title: {
+								text: '位置信息',
+								subtext: '来源：本平台采集',
+								left: 'center',
+								textStyle: {
+									color: '#fff'
+								}
+							},
+							tooltip: {
+								trigger: 'item'
+							},
+							geo: {
+								map: 'china',
+								label: {
+									emphasis: {
+										show: false
+									}
+								},
+								roam: false,
+								zoom: 1.2,
+								itemStyle: {
+									normal: {
+										areaColor: 'rgba(2,37,101,.5)',
+										borderColor: 'rgba(112,187,252,.5)'
+									},
+									emphasis: {
+										areaColor: 'rgba(2,37,101,.8)'
+									}
+								}
+							},
+							series: [
+								{
+									name: '地点',
+									type: 'scatter',
+									coordinateSystem: 'geo',
+									data: convertData(data),
+									symbolSize: function (val) {
+										return val[2] / 15;
+									},
+									label: {
+										normal: {
+											formatter: '{b}',
+											position: 'right',
+											show: false
+										},
+										emphasis: {
+											show: true
+										}
+									},
+									itemStyle: {
+										normal: {
+											color: '#ffeb7b'
+										}
+									}
+								}
+
+							]
+						};
+
+						myChart.setOption(option);
+						window.addEventListener("resize", function () {
+							myChart.resize();
+						});
+					}
+
+				})
+
+
+			</script>
+
+			<!-- 地图结束 -->
+
+			<!-- 介绍部分开始 -->
+			<li style="width: 22%;height: 100%;">
+
+				<div class="box" style="height: 40%;">
+					<div class="tit"> 设备信息 </div>
+					<div class="device-info">
+						<h2>设备号 : 28950</h2>
+						<h2>所在地区 : 辽宁省锦州市</h2>
+						<h2>数据缓存时长 : 30分钟</h2>
+					</div>
+				</div>
+				<div class="box" style="height: 58%;">
+					<div class="tit"> 关键因子 </div>
+					<div class="boxnav">
+						<div style="height: 200px; float: left; width: 100%">
+							<div class="text-b tit02" style="text-align: center;"></div>
+							<div class="tagcloud">
+								<!-- bo大小 co颜色 -->
+								<a class="b01 co01">感知</a>
+								<a class="b02 co02">控制</a>
+								<a class="b03 co05">温湿度</a>
+								<a class="b04 co02">降雨量</a>
+								<a class="b03 co05">风速风向</a>
+								<a class="b03 co01">酸碱度</a>
+								<a class="b03 co05">气流气压</a>
+							</div>
+							<script type="text/javascript">
+								/*3D标签云*/
+								tagcloud({
+									selector: ".tagcloud",  //元素选择器
+									fontsize: 6,       //基本字体大小, 单位px
+									radius: 40,         //滚动半径, 单位px 页面宽度和高度的五分之一
+									mspeed: "slow",   //滚动最大速度, 取值: slow, normal(默认), fast
+									ispeed: "slow",   //滚动初速度, 取值: slow, normal(默认), fast
+									direction: 0,     //初始滚动方向, 取值角度(顺时针360): 0对应top, 90对应left, 135对应right-bottom(默认)...
+									keep: false          //鼠标移出组件后是否继续随鼠标滚动, 取值: false, true(默认) 对应 减速至初速度滚动, 随鼠标滚动
+								});
+							</script>
+						</div>
+					</div>
+				</div>
+
+			</li>
+			<!-- 介绍部分结束 -->
+		</ul>
+
+		<div class="box" style="padding-top: 20px;height: 30%;margin-top: 20px;">
+			<ul class="clearfix nav2">
+				<li style="width:25%;">
+					<div class="tit01">棚内温度</div>
+					<div id="one"></div>
+				</li>
+				<li style="width:25%">
+					<div class="tit01">棚内湿度</div>
+					<div id="two"></div>
+				</li>
+				<li style="width:25%">
+					<div class="tit01">实时风速</div>
+					<div id="three"></div>
+				</li>
+				<li style="width:25%">
+					<div class="tit01">实时光照</div>
+					<div id="four"></div>
+				</li>
+			</ul>
+		</div>
+
+
+		<script>
+			// 获取元素
+			var items = $(".data_val");
+			// 获取实时数据
+			let keys = ["Tem", "Hum", "soilTem_1", "soilHum_1", "soilTem_2", "soilHum_2", "ppm", "pH", "CO", "windSpd", "rain_cur", "light", "uRays"]
+
+			var storage = window.localStorage;
+			var bkDataStr = storage.getItem("bkData");
+			var bkDataObj = JSON.parse(bkDataStr);
+
+			setInterval(function () {
+
+				bkDataStr = storage.getItem("bkData");
+				bkDataObj = JSON.parse(bkDataStr);
+				for (let index = 0; index < items.length; index++) {
+					items[index].innerText = bkDataObj[keys[index]]
+				}
+			}, 1000)
+		</script>
+
+		<script>
+			let TemX = [];
+			let TemY = [];
+
+			let HumX = [];
+			let HumY = [];
+
+			let windSpdX = [];
+			let windSpdY = [];
+
+			let lightX = [];
+			let lightY = [];
+			
+			setInterval(function () {
+				// 统计图一开始
+
+				if (TemX.length > 3) {
+					TemX.shift();
+					let time = new Date().toLocaleTimeString();
+					TemX.push(time);
+
+					TemY.shift();
+					TemY.push(bkDataObj["Tem"]);
+				} else {
+					let time = new Date().toLocaleTimeString();
+					TemX.push(time);
+					TemY.push(bkDataObj["Tem"]);
+				}
+
+				var chartDomOne = document.getElementById('one');
+				var myChartOne = echarts.init(chartDomOne);
+				var optionOne;
+
+				optionOne = {
+					xAxis: {
+						type: 'category',
+						data: TemX,
+						axisLine: {
+							lineStyle: {
+								color: "#9a9999"
+							}
+						}
+					},
+					yAxis: {
+						type: 'value',
+						axisLine: {
+							lineStyle: {
+								color: "#9a9999"
+							}
+						}
+					},
+					series: [
+						{
+							data: TemY,
+							type: 'line',
+							smooth: true,
+							itemStyle: {
+								normal: {
+									color: "white",
+									lineStyle: {
+										color: "#62c98d",
+									}
+								}
+							}
+						}
+					]
+				};
+
+				optionOne && myChartOne.setOption(optionOne);
+				// 统计图一结束
+
+
+				// 统计图二开始
+
+				if (HumX.length > 3) {
+					HumX.shift();
+					let time = new Date().toLocaleTimeString();
+					HumX.push(time);
+
+					HumY.shift();
+					HumY.push(bkDataObj["Hum"]);
+				} else {
+					let time = new Date().toLocaleTimeString();
+					HumX.push(time);
+					HumY.push(bkDataObj["Hum"]);
+				}
+
+				var chartDomTwo = document.getElementById('two');
+				var myChartTwo = echarts.init(chartDomTwo);
+				var optionTwo;
+
+				optionTwo = {
+					xAxis: {
+						type: 'category',
+						data: HumX,
+						axisLine: {
+							lineStyle: {
+								color: "#9a9999"
+							}
+						}
+					},
+					yAxis: {
+						type: 'value',
+						axisLine: {
+							lineStyle: {
+								color: "#9a9999"
+							}
+						}
+					},
+					series: [
+						{
+							data: HumY,
+							type: 'line',
+							smooth: true,
+							itemStyle: {
+								normal: {
+									color: "white",
+									lineStyle: {
+										color: "#62c98d",
+
+									}
+								}
+							}
+						}
+					]
+				};
+
+				optionTwo && myChartTwo.setOption(optionTwo);
+				// 统计图二结束
+
+
+				// 统计图三开始
+				if (windSpdX.length > 3) {
+					windSpdX.shift();
+					let time = new Date().toLocaleTimeString();
+					windSpdX.push(time);
+
+					windSpdY.shift();
+					windSpdY.push(bkDataObj["windSpd"]);
+				} else {
+					let time = new Date().toLocaleTimeString();
+					windSpdX.push(time);
+					windSpdY.push(bkDataObj["windSpd"]);
+				}
+
+				var chartDomThree = document.getElementById('three');
+				var myChartThree = echarts.init(chartDomThree);
+				var optionThree;
+
+				optionThree = {
+					xAxis: {
+						type: 'category',
+						data: windSpdX,
+						axisLine: {
+							lineStyle: {
+								color: "#9a9999"
+							}
+						}
+					},
+					yAxis: {
+						type: 'value',
+						axisLine: {
+							lineStyle: {
+								color: "#9a9999"
+							}
+						}
+					},
+					series: [
+						{
+							data: windSpdY,
+							type: 'line',
+							smooth: true,
+							itemStyle: {
+								normal: {
+									color: "white",
+									lineStyle: {
+										color: "#62c98d",
+
+									}
+								}
+							}
+						}
+					]
+				};
+
+				optionThree && myChartThree.setOption(optionThree);
+				// 统计图三结束
+
+
+				// 统计图四开始
+				if (lightX.length > 3) {
+					lightX.shift();
+					let time = new Date().toLocaleTimeString();
+					lightX.push(time);
+
+					lightY.shift();
+					lightY.push(bkDataObj["light"]);
+				} else {
+					let time = new Date().toLocaleTimeString();
+					lightX.push(time);
+					lightY.push(bkDataObj["light"]);
+				}
+
+				var chartDomFour = document.getElementById('four');
+				var myChartFour = echarts.init(chartDomFour);
+				var optionFour;
+
+				optionFour = {
+					xAxis: {
+						type: 'category',
+						data: lightX,
+						axisLine: {
+							lineStyle: {
+								color: "#9a9999"
+							}
+						}
+					},
+					yAxis: {
+						type: 'value',
+						axisLine: {
+							lineStyle: {
+								color: "#9a9999"
+							}
+						}
+					},
+					series: [
+						{
+							data: lightY,
+							type: 'line',
+							smooth: true,
+							itemStyle: {
+								normal: {
+									color: "white",
+									lineStyle: {
+										color: "#62c98d",
+
+									}
+								}
+							}
+						}
+					]
+				};
+
+				optionFour && myChartFour.setOption(optionFour);
+				// 统计图四结束
+			}, 1000)
+		</script>
+
+
+	</div>
+</body>
+<style>
+	#one,
+	#two,
+	#three,
+	#four {
+		width: 100%;
+		height: 120%;
+		margin-top: -40px;
+		color: #046fdb;
+	}
+</style>
+
+</html>
